@@ -45,3 +45,8 @@ backend/node_modules/
 
 # Frontend dependencies
 frontend/node_modules/
+
+# Ignorar archivos de caché de Angular
+dist/
+node_modules/
+.angular/
