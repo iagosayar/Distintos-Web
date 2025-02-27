@@ -19,7 +19,10 @@ async function saveUser(req, res) {
     user.gamertag = params.gamertag;
     user.platform = params.platform;
     user.position = params.position;
-
+    //asi cada usuario loggeado tendra automaticamente el rol de candidato y no de jugador. 
+    user.candidate=true;
+    user.player=false;
+    user.admin=false;
     if (params.password) {
         params.password = params.password.trim(); // Eliminar espacios en blanco
         console.log('Contraseña recibida:', params.password);
@@ -86,8 +89,68 @@ async function loginUser(req, res) {
     }
 }
 
+
+/**
+ * @function updateUser
+ * En el middleware ensureAuth, asignamos el valor del payload (información del usuario) a req.user
+ * De esta manera, recibimos dos datos importantes en el controlador:
+ * 1. req.params : los parámetros de la URL, que incluyen el ID del usuario que se actualizará.
+ * 2. req.user: los parametros del usuario autenticado, que incluyen el ID del usuario que ha iniciado sesión.
+ * Ambos datos son necesarios para comparar si el usuario autenticado es el mismo que el usuario que se actualizará.
+ * 
+ * En el controlador, debemos comprobar que ambos IDs coincidan para asegurarnos de que el usuario autenticado
+ * solo pueda actualizar su propia información. Esto ayuda a evitar fraudes y accesos no autorizados.
+ */
+
+async function updateUser(req, res) {
+var params = req.body;                        //recogemos los parametros que nos llegan por la peticion
+var userId = req.params.id;                   //recogemos el id que nos llega por la url
+
+
+    if (userId != req.user.sub){
+        return res.status(500).send({message: 'No tienes permisos para actualizar este usuario'});
+    }
+// Verificamos que params.candidate y params.player no sean ambos true al mismo tiempo, tambien que params.admin no sea true si es candidato.
+    if (params.candidate && params.player) {
+        return res.status(400).send({ message: 'No puedes ser pruebas y jugador al mismo tiempo' });
+    }
+
+// Si se marca como admin, aseguramos que candidate son false  /solo puedes acceder a ser admin siento jugador
+    if (params.admin && params.candidate) {
+        return res.status(400).send({ message: 'No puedes ser admin y pruebas al mismo tiempo' });
+    }
+// Si se marca como candidato, aseguramos que player y admin son false
+    if (params.candidate) {
+        params.player = false;
+        params.admin = false
+    }
+// Si se marca como player, aseguramos que candidate es false
+    if (params.player) {
+        params.candidate = false;
+    }
+
+   
+
+
+    try{
+    const UpdateUser =  await User.findByIdAndUpdate(userId, params, {new:true})//actualizamos el usuario
+
+    if(!UpdateUser){                                                            //comporbamos si se ha actualizado el usuario
+        return res.status(404).send({message: 'No se ha podido actualizar el usuario'});
+    }
+
+    return res.status(200).send({user: UpdateUser}); //devolvemos el usuario actualizado
+    }catch(err){
+        console.log("Error al actualizar el usuario", err);
+        return res.status(500).send({message: 'Error al actualizar el usuario'});
+    }
+}
+
+
+
 module.exports = {
     pruebas,
     saveUser,
-    loginUser
-};
+    loginUser,
+    updateUser
+}

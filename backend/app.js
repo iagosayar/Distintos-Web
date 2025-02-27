@@ -9,7 +9,7 @@ var app = express();
 var user_routes = require('./routes/user');
 
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json()); // Fixed: changed 'unsubscribe' to 'use'
+app.use(bodyParser.json());
 //configurar cabeceras http
 
 //rutas base

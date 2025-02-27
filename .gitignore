@@ -43,6 +43,9 @@ Thumbs.db
 # Backend dependencies
 backend/node_modules/
 
+# Backend env variables
+Uptdate_evn.bat
+
 # Frontend dependencies
 frontend/node_modules/
 
